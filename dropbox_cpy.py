@@ -33,7 +33,7 @@ import time
 from json import dumps, loads
 from random import random
 from binascii import b2a_base64
-import adafruit_requests_fix
+from adafruit_requests_fix import Session
 
 #
 # Dropbox API Hosts and routes
@@ -240,7 +240,7 @@ class DropboxAPI(object):
             )
         if session is None:
             raise ValueError('adafruit_requests.Session must be set')
-        if not isinstance(session, adafruit_requests_fix.Session):
+        if not isinstance(session, Session):
             raise ValueError('Expected adafruit_requests.Session, got {}'
                                         .format(session))
         self._session = session

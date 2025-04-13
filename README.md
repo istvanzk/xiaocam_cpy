@@ -38,12 +38,13 @@ Then follow the [OAuth flow](https://github.com/dropbox/dropbox-sdk-python/blob/
 
 The modified official Adafruit CircuitPython Requests library, Release 97, v4.1.10, March 2025.
 
+**NOTE**: This may be an error specific to the XIAO board and/or due to certain Dropbox API server behaviour. To be further tested with other boards (XIAO and others).
+
 This modification was needed to avoid `OSError: [Errno 116] ETIMEDOUT` from `socket.recv_into()`.
 See [Issue #209](https://github.com/adafruit/Adafruit_CircuitPython_Requests/issues/209). 
 
-**NOTE**: This may be an error specific to the XIAO board and/or due to Dropbox server behaviour. To be further tested with other boards (XIAO and others).
-
 *I recommend you start with the most up to date official Adafruit CircuitPython Requests library. Only in case you encounter the `OSError: [Errno 116] ETIMEDOUT` error then try switching to this 'fixed' version.*
+The `adafruit_requests` or `adafruit_requests_fix` is used in the following modules: `local_time`, `dropbox_cpy`, `wifitime_test` and `dbx_test`.
 
 
 ### settings.toml

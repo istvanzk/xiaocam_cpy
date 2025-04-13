@@ -2,8 +2,8 @@
 # Test the CircuitPython DropboxAPI implementation
 import os
 import board
-import adafruit_requests_fix as requests
 import adafruit_connection_manager as cm
+import adafruit_requests_fix as requests
 import wifi
 import sdcardio
 import storage
