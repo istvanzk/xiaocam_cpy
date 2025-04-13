@@ -31,8 +31,8 @@ Several of the original parameters and functionalities have been removed.
 Error handling is simplified and only the most common errors are handled.
 The code is not intended to be a full implementation of the Dropbox API.
 
-In order to use the Dropbox API implememented here, you need to have a Dropbox account and set up an App in your App Console. 
-Then follow the [OAuth flow](https://github.com/dropbox/dropbox-sdk-python/blob/main/example/oauth/commandline-oauth-scopes.py), which can be run on a development machine (not the XIAO board), to obtain the _access_token_ and _refresh_token_. These tokens need to be inserted in the `settings.toml` file, as the values for the corresponding DBX_* variables. Don't forget to set all the other DBX_* variables also, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
+In order to use the Dropbox API implemented here, you need to have a Dropbox account and set up an App in your [Dropbox App Console](https://www.dropbox.com/developers/reference/getting-started). 
+Then follow the [OAuth flow](https://github.com/dropbox/dropbox-sdk-python/blob/main/example/oauth/commandline-oauth-scopes.py), which can be run on a development machine (not the XIAO board), to obtain the _access_token_ and _refresh_token_. These tokens need to be inserted in the `settings.toml` file, as the values for the corresponding DBX_* variables. Don't forget to set also all the other DBX_* variables, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
 
 ### adafruit_requests_fix
 
