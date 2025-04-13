@@ -1,0 +1,15 @@
+# WiFi
+CIRCUITPY_WIFI_SSID = "<WiFi SSID>"
+CIRCUITPY_WIFI_PASSWORD = "<WiFi password>"
+
+# Time server. Timezone names from http://worldtimeapi.org/timezones
+ADAFRUIT_AIO_USERNAME = "<Adafruit IO user name>"
+ADAFRUIT_AIO_KEY = "<Adafruit IO key/token>"
+TIMEZONE = "<Time zone>" # e.g. Europe/Amsterdam
+
+# Dropbox
+DBX_APP_KEY = "<App key>"
+DBX_APP_SECRET = "<App secret>"
+DBX_REFRESH_TOKEN = "<tokens["oauth_result"].refresh_token>"
+DBX_ACCESS_TOKEN = "<tokens["oauth_result"].access_token>"
+DBX_EXPIRES_AT = <tokens["oauth_result"].expires_at>
