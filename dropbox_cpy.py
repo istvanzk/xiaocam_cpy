@@ -589,7 +589,7 @@ class DropboxAPI(object):
         """
         return 'https://{hostname}/{version}/{route_name}'.format(
             hostname=hostname,
-            version=Dropbox._API_VERSION,
+            version=DropboxAPI._API_VERSION,
             route_name=route_name,
         )
 
