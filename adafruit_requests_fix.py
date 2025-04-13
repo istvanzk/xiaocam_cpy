@@ -5,7 +5,7 @@
 
 # Modifed by István Z. Kovács, April 2025
 # Based on Adafruit CircuitPython Requests library, Release 97, v4.1.10, March 2025
-# Added line 456: sleep(0.02)
+# Added line 458: sleep(0.02)
 # to avoid OSError: [Errno 116] ETIMEDOUT from socket.recv_into() 
 # See https://github.com/adafruit/Adafruit_CircuitPython_Requests/issues/209
 
