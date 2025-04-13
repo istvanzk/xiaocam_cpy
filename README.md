@@ -53,11 +53,11 @@ class Session:
 ...
   @staticmethod
   def _send(socket: SocketType, data: bytes):
-  total_sent = 0
-  while total_sent < len(data):
-    try:
-        sleep(0.02) # Added to avoid `OSError: [Errno 116] ETIMEDOUT` from socket.recv_into()
-        sent = socket.send(data[total_sent:])
+    total_sent = 0
+    while total_sent < len(data):
+      try:
+          sleep(0.02) # Added to avoid `OSError: [Errno 116] ETIMEDOUT` from socket.recv_into()
+          sent = socket.send(data[total_sent:])
 ... 
 ```
 
