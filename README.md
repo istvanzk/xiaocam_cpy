@@ -2,15 +2,16 @@
 
 ![Exp](https://img.shields.io/badge/Dev-Experimental-orange.svg)
 [![Lic](https://img.shields.io/badge/License-MIT-green)](https://mit-license.org)
-![CircuitPy](https://img.shields.io/badge/CircuitPython-9.2.6+-green)
+![CircuitPy](https://img.shields.io/badge/CircuitPython-9.2.7-green)
 ![Ver](https://img.shields.io/badge/Version-0.1-blue)
 
 
 ## Implementation
 
-This implementation has been developed and tested on [Seeed Studio XIAO ESP32S3 Sense](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
-with [Adafruit CircuitPython](https://circuitpython.org/board/seeed_xiao_esp32s3_sense/). 
-To install CircuitPython, follow the [Installing CircuitPython on ESP32](https://learn.adafruit.com/circuitpython-with-esp32-quick-start/installing-circuitpython) instructions.
+The code was built for and tested with:
+* [Seeed Studio XIAO ESP32S3 Sense](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
+* [Adafruit CircuitPython 9.2.7](https://circuitpython.org/board/seeed_xiao_esp32s3_sense/). To install CircuitPython, follow the [Installing CircuitPython on ESP32](https://learn.adafruit.com/circuitpython-with-esp32-quick-start/installing-circuitpython) instructions.
+* [mpy-cross-\*-9.2.7-32\*](https://adafruit-circuit-python.s3.amazonaws.com/index.html?prefix=bin/mpy-cross/)
 
 ### main
 
@@ -39,6 +40,8 @@ Then follow the [OAuth flow](https://github.com/dropbox/dropbox-sdk-python/blob/
 These need to be inserted in the `settings.toml` file, as the values for the corresponding DBX_* variables.
 Don't forget to set also all the other DBX_* variables, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
 
+The [dropbox_cpy.py](./dropbox_cpy.py) can [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
+
 ### [adafruit_requests_fix](./adafruit_requests_fix.py)
 
 The modified official Adafruit CircuitPython Requests library, Release 97, v4.1.10, March 2025.
@@ -65,6 +68,7 @@ class Session:
 Only in case you encounter the `OSError: [Errno 116] ETIMEDOUT` error then try switching to this 'fixed' version.*
 The `adafruit_requests` or `adafruit_requests_fix` is used in the following modules: `local_time`, `dropbox_cpy`, `wifitime_test` and `dbx_test`.
 
+The [adafruit_requests_fix](./adafruit_requests_fix.py) can [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
 
 ### [settings.toml](./settings.toml)
 
@@ -97,9 +101,17 @@ The configuration file with camera and time-lapse parameters.
 
 ### Dependencies
 
-* [Adafruit CircuitPython for XIAO ESPP32S3 Sense](https://circuitpython.org/board/seeed_xiao_esp32s3_sense/)
-* [adafruit_requests](https://docs.circuitpython.org/projects/requests/en/latest/api.html)
-* [adafruit_connection_manager](https://docs.circuitpython.org/projects/connectionmanager/en/latest/api.html)
+* [Adafruit CircuitPython 9.2.7+ for XIAO ESPP32S3 Sense](https://circuitpython.org/board/seeed_xiao_esp32s3_sense/)
+  - To install follow the [Installing CircuitPython on ESP32](https://learn.adafruit.com/circuitpython-with-esp32-quick-start/installing-circuitpython) 
+  - For command line [esptool](https://docs.espressif.com/projects/esptool/en/latest/esp32/index.html#quick-start), in boot mode (replace the port with yours):
+    ```
+    esptool.py --chip esp32s3 --port /dev/tty.usbmodem14401 erase_flash
+    
+    esptool.py --port /dev/tty.usbmodem14401 write_flash -z 0x0 adafruit-circuitpython-seeed_xiao_esp32_s3_sense-en_GB-9.2.7.bin
+    ```
+* Libraries (in /lib):
+  - [adafruit_connection_manager](https://docs.circuitpython.org/projects/connectionmanager/en/latest/api.html)
+  - [adafruit_requests](https://docs.circuitpython.org/projects/requests/en/latest/api.html) or the modified version [adafruit_requests_fix](#adafruit_requests_fix)
 
 
 ## Testing
