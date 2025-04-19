@@ -64,6 +64,7 @@ The [adafruit_requests_fix](./adafruit_requests_fix.py) can be [compiled to mpy 
 **Observations**: 
 * The upload time for 50KB image file is very large, around 20 seconds! This is not normal, nor experienced when using the official Dropbox Python SDK V2. With [MQTT image upload to Adafruit IO](https://learn.adafruit.com/capturing-camera-images-with-circuitpython/example-webcam-with-adafruit-io) the large upload times are not observed either.
 * The connection seems to be randomly dropped (by the server?) and the code hangs in the `socket.send()`, without throwing any errors.
+* ...
 
 
 **Attempt \#1**:
