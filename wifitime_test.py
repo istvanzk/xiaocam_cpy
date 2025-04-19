@@ -2,8 +2,8 @@
 # Test the LocalTimeAPI implementation
 import os
 import wifi
-import adafruit_connection_manager as cm
-import adafruit_requests_fix as requests
+from adafruit_connection_manager import get_radio_socketpool, get_radio_ssl_context
+from adafruit_requests_fix import Session
 import time
 from local_time import LocalTimeAPI
 
@@ -17,8 +17,10 @@ ssid = os.getenv("CIRCUITPY_WIFI_SSID")
 password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 if ssid is not None and password is not None:
     rssi = wifi.radio.ap_info.rssi
-    print(f"\nConnecting to {ssid}...")
+    ip = wifi.radio.ipv4_address
     print(f"Signal Strength: {rssi}")
+    print(f"IP Address: {ip}")
+    print(f"\nConnecting to {ssid}...")
     wifi_available = True
     try:
         # Connect to the Wi-Fi network
@@ -28,19 +30,19 @@ if ssid is not None and password is not None:
         print(f"❌ OSError: {e}")
     print("✅ WiFi connected")
 else:
-    print(f"❌ Wifi credentials not found in settings.toml. No WiFi connection.")
+    print(f"❌ WiFi credentials not found in settings.toml. No WiFi connection.")
 
 # Initalize Socket Pool, Request Session
 requests_session = None
 if wifi_available:
-    pool = cm.get_radio_socketpool(wifi.radio)
-    ssl_context = cm.get_radio_ssl_context(wifi.radio)
-    requests_session = requests.Session(pool, ssl_context)
+    pool = get_radio_socketpool(wifi.radio)
+    ssl_context = get_radio_ssl_context(wifi.radio)
+    requests_session = Session(pool, ssl_context)
 
 # Test only if wifi and requests session are available
 if wifi_available and requests_session is not None:
     
-    # Time API instance (singleton)
+    # Local Time API instance
     time_api = LocalTimeAPI(requests_session)
 
     # Get the current time

@@ -22,10 +22,11 @@ The code was built for and tested with:
 
 This is a simple API implemenation to get the local time from an internet time server and set the RTC time of the board. 
 
-The primary time server used is the [Adafruit IO time server](https://learn.adafruit.com/shadow-box-internet-clock-with-neopixel-visualization/getting-the-date-time). 
-To use this you need an Adafruit IO account and IO key. The Adafruit IO username and key need to be inserted in the `settings.toml` file, as the values for ADAFRUIT_AIO_USERNAME and ADAFRUIT_AIO_KEY variables, respectively, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
+The primary time server used is the [Adafruit IO time server](https://io.adafruit.com/istvank/services/time).
+The simplest are the `/time` requests, which can be used without authenticating.
+To use the `/integration` requests you need an Adafruit IO account and IO key. The Adafruit IO username and key need to be inserted in the `settings.toml` file, as the values for ADAFRUIT_AIO_USERNAME and ADAFRUIT_AIO_KEY variables, respectively, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
 
-The secondary time server which ca be used is the [TimeAPI](https://www.timeapi.io/), which does not require any account or key for access.
+Another time server which ca be used is the [TimeAPI](https://www.timeapi.io/), which does not require authentication either.
 
 ### [dropbox_cpy](./dropbox_cpy.py)
 
@@ -40,35 +41,105 @@ Then follow the [OAuth flow](https://github.com/dropbox/dropbox-sdk-python/blob/
 These need to be inserted in the `settings.toml` file, as the values for the corresponding DBX_* variables.
 Don't forget to set also all the other DBX_* variables, [see below](#settingstoml-the-configuration-file-with-all-the-environment-variables-used).
 
-The [dropbox_cpy.py](./dropbox_cpy.py) can [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
+The [dropbox_cpy.py](./dropbox_cpy.py) can be [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
 
 ### [adafruit_requests_fix](./adafruit_requests_fix.py)
 
 The modified official Adafruit CircuitPython Requests library, Release 97, v4.1.10, March 2025.
-
-**NOTE**: This may be an error specific to the XIAO boards and/or due to certain Dropbox API server behaviour. Test on [XIAO ESP32C3](https://circuitpython.org/board/seeed_xiao_esp32c3/) in CircuitPython 9.2.7 resulted in the same problem and same solution.
-To be further tested with other boards.
-
-A modification was needed to avoid `OSError: [Errno 116] ETIMEDOUT` from `socket.recv_into()`.
+The modification was needed to avoid `OSError: [Errno 116] ETIMEDOUT` from `socket.recv_into()`.
 See [Issue #209](https://github.com/adafruit/Adafruit_CircuitPython_Requests/issues/209). 
-```
-class Session:
-...
-  @staticmethod
-  def _send(socket: SocketType, data: bytes):
-    total_sent = 0
-    while total_sent < len(data):
-      try:
-          sleep(0.02) # Added to avoid `OSError: [Errno 116] ETIMEDOUT` from socket.recv_into()
-          sent = socket.send(data[total_sent:])
-... 
-```
+
+**NOTE**: This is not an error specific to the XIAO boards, rather is due Dropbox API server behaviour. 
+E.g. was tested on [XIAO ESP32C3](https://circuitpython.org/board/seeed_xiao_esp32c3/) in CircuitPython 9.2.7 resulted in the same problem and same solution.
 
 *I recommend you start with the most up to date official Adafruit CircuitPython Requests library.
 Only in case you encounter the `OSError: [Errno 116] ETIMEDOUT` error then try switching to this 'fixed' version.*
 The `adafruit_requests` or `adafruit_requests_fix` is used in the following modules: `local_time`, `dropbox_cpy`, `wifitime_test` and `dbx_test`.
 
-The [adafruit_requests_fix](./adafruit_requests_fix.py) can [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
+The [adafruit_requests_fix](./adafruit_requests_fix.py) can be [compiled to mpy format](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions#faq-3105290) to save space.
+
+<details>
+<summary>Attempts to solve `OSError: [Errno 116] ETIMEDOUT`</summary> 
+
+**Observations**: 
+* The upload time for 50KB image file is very large, around 20 seconds! This is not normal, nor experienced when using the official Dropbox Python SDK V2. With [MQTT image upload to Adafruit IO](https://learn.adafruit.com/capturing-camera-images-with-circuitpython/example-webcam-with-adafruit-io) the large upload times are not observed either.
+* The connection seems to be randomly dropped (by the server?) and the code hangs in the `socket.send()`, without throwing any errors.
+
+
+**Attempt \#1**:
+Insert `time.sleep(0.02)` in `adafruit_requests._send()`:
+  ```
+  class Session:
+  ...
+    @staticmethod
+    def _send(socket: SocketType, data: bytes):
+      total_sent = 0
+      while total_sent < len(data):
+        try:
+            sleep(0.02) # Added to avoid `OSError: [Errno 116] ETIMEDOUT` from socket.recv_into()
+            sent = socket.send(data[total_sent:])
+  ... 
+  ```
+**Result #1: Solves the problem**. 
+
+**Attempt \#2**:
+Use the [socket options to enable keep-alive](https://github.com/psf/requests/issues/3353#issuecomment-722772458):
+  ```
+  socket.setsockopt(socket_pool.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+  socket.setsockopt(socket_pool.IPPROTO_TCP, socket.TCP_KEEPIDLE, 1)
+  socket.setsockopt(socket_pool.IPPROTO_TCP, socket.TCP_KEEPINTVL, 3)
+  socket.setsockopt(socket_pool.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
+  ```
+
+Most of the above constants are not defined in CircuitPython 9.2.7, but defined in the [underlying lwIP implementation](https://github.com/adafruit/Adafruit_CircuitPython_Requests/issues/209#issuecomment-2816247084)
+in `circuitpython/ports/espressif/esp-idf/components/lwip/lwip/src/include/lwip/sockets.h`:
+  ```
+  /* Socket protocol types (TCP/UDP/RAW) */
+  #define SOCK_STREAM     1
+  #define SOCK_DGRAM      2
+  #define SOCK_RAW        3
+
+  #define  SOL_SOCKET  0xfff    /* options for socket level */
+
+  # Socket protocols
+  https://stackoverflow.com/questions/5385312/ipproto-ip-vs-ipproto-tcp-ipproto-udp
+  #define IPPROTO_IP      0
+  #define IPPROTO_ICMP    1
+  #define IPPROTO_TCP     6
+  #define IPPROTO_UDP     17
+  #define IPPROTO_RAW     255
+
+  #define SO_KEEPALIVE   0x0008 /* keep connections alive */
+
+  /*
+  * Options for level IPPROTO_IP
+  */
+  #define IP_TOS             1
+  #define IP_TTL             2
+  #define IP_PKTINFO         8
+
+  /*
+  * Options for level IPPROTO_TCP
+  */
+  #define TCP_NODELAY    0x01    /* don't delay send to coalesce packets */
+  #define TCP_KEEPALIVE  0x02    /* send KEEPALIVE probes when idle for pcb->keep_idle milliseconds */
+  #define TCP_KEEPIDLE   0x03    /* set pcb->keep_idle  - Same as TCP_KEEPALIVE, but use seconds for get/setsockopt */
+  #define TCP_KEEPINTVL  0x04    /* set pcb->keep_intvl - Use seconds for get/setsockopt */
+  #define TCP_KEEPCNT    0x05    /* set pcb->keep_cnt   - Use number of probes sent for get/setsockopt */
+              
+  ```
+Insert the sequence below in `adafruit_requests.request()`, after the socket is created:
+
+  ```
+  socket.setsockopt(0xfff, 0x0008, 1)
+  #socket.setsockopt(6, 0x2, 3) #KEEPALIVE
+  socket.setsockopt(6, 0x3, 1) #KEEPIDLE
+  socket.setsockopt(6, 0x4, 3) #KEEPINTVL
+  socket.setsockopt(6, 0x5, 5) #KEEPCNT
+  ```
+**Result #2: Does not solve the problem!**
+
+</details>
 
 ### [settings.toml](./settings.toml)
 
@@ -106,7 +177,7 @@ The configuration file with camera and time-lapse parameters.
   - For command line [esptool](https://docs.espressif.com/projects/esptool/en/latest/esp32/index.html#quick-start), in boot mode (replace the port with yours):
     ```
     esptool.py --chip esp32s3 --port /dev/tty.usbmodem14401 erase_flash
-    
+
     esptool.py --port /dev/tty.usbmodem14401 write_flash -z 0x0 adafruit-circuitpython-seeed_xiao_esp32_s3_sense-en_GB-9.2.7.bin
     ```
 * Libraries (in /lib):

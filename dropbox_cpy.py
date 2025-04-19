@@ -64,7 +64,7 @@ DB_DOWNLOAD_ROUTE = "files/download"
 API_NOTIFICATION_HOST = "notify.dropboxapi.com"
 
 # Maximum blocking timeout for requests
-DEFAULT_TIMEOUT = 5
+DEFAULT_TIMEOUT = 15
 # Token expiration buffer time
 TOKEN_EXPIRATION_BUFFER = 60*5
 # HTTP status codes
@@ -263,7 +263,7 @@ class DropboxAPI(object):
         self._max_retries_on_error = max_retries_on_error
         self._max_retries_on_rate_limit = max_retries_on_rate_limit
 
-        base_user_agent =  "UnofficialDropboxCircuitPythonSDKv0" #"OfficialDropboxPythonSDKv2/12.0.2"
+        base_user_agent = "UnofficialDropboxCircuitPythonSDKv0" #"OfficialDropboxPythonSDKv2/12.0.2"
         if user_agent:
             self._raw_user_agent = user_agent
             self._user_agent = '{}/{}'.format(user_agent, base_user_agent)
@@ -382,13 +382,13 @@ class DropboxAPI(object):
             timeout=self._timeout)
 
 
-    def files_upload(self, file_handle, path: str, writemode: str ='overwrite'):
+    def files_upload(self, file, path: str, writemode: str ='overwrite'):
         """
         Uploads a file under user App root folder.
         NOTE: Do not use this to upload a file larger than 150 MiB. 
         Instead, create an upload session with upload_session/start.
 
-        :param IO file_handle: File handle for contents to upload.
+        :param IO or memoryview/array file: File handle or base64 encoded memoryview/array for contents to upload.
         :param str path: remote path to the file to be uploaded
         :param str writemode: 'overwrite', 'add' or 'update' (default: 'overwrite')
         :return: json with upload info
@@ -409,7 +409,7 @@ class DropboxAPI(object):
         return self.post_request_json_string_with_retry(
             url, 
             headers=headers,
-            data=file_handle,
+            data=file,
             timeout=self._timeout)
 
 

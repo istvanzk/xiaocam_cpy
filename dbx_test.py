@@ -2,8 +2,8 @@
 # Test the CircuitPython DropboxAPI implementation
 import os
 import board
-import adafruit_connection_manager as cm
-import adafruit_requests_fix as requests
+from adafruit_connection_manager import get_radio_socketpool, get_radio_ssl_context
+from adafruit_requests_fix import Session
 import wifi
 import sdcardio
 import storage
@@ -37,7 +37,7 @@ if ssid is not None and password is not None:
 else:
     print(f"❌ Wifi credentials not found in settings.toml. No WiFi connection.")
 
-session = None
+requests_session = None
 # Nothing to do without WiFi connection
 if not wifi_available:
     print("😞 Bye!")
@@ -45,9 +45,9 @@ if not wifi_available:
 
 # Initalize Socket Pool, Request Session
 # See https://github.com/adafruit/Adafruit_CircuitPython_ConnectionManager/blob/42073559468d0c8af9bb1fe5e06fccd4d1d9a845/adafruit_connection_manager.py#L130
-pool = cm.get_radio_socketpool(wifi.radio)
-ssl_context = cm.get_radio_ssl_context(wifi.radio)
-session = requests.Session(pool, ssl_context)
+pool = get_radio_socketpool(wifi.radio)
+ssl_context = get_radio_ssl_context(wifi.radio)
+requests_session = Session(pool, ssl_context)
 ## Alternative
 ## https://docs.circuitpython.org/en/latest/shared-bindings/ssl/index.html
 # import socketpool
@@ -64,13 +64,13 @@ session = requests.Session(pool, ssl_context)
 
 # print("-" * 40)
 # print("Nothing yet opened")
-# connection_manager = cm.get_connection_manager(pool)
+# connection_manager = get_connection_manager(pool)
 # print(f"Managed Sockets: {connection_manager.managed_socket_count}")
 # print(f"Available Managed Sockets: {connection_manager.available_socket_count}")
 
 print("-" * 80)
 print("Init Time API instance and set RTC time...")
-time_api = LocalTimeAPI(session)
+time_api = LocalTimeAPI(requests_session)
 time_api.set_datetime()
 print(f"✅ Current RTC time: {time_api.get_datetime()}")
 print("-" * 80)
@@ -100,7 +100,7 @@ try:
         user_agent='XiaoCPY1/0.0.1',
         oauth2_access_token_expiration=dbx_access_token_expiration, #seconds, not datetime.datetime!
         oauth2_refresh_token=dbx_refresh_token,
-        session=session,
+        session=requests_session,
         app_key=dbx_app_key,
         app_secret=dbx_app_secret
     )
