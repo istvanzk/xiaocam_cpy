@@ -3,7 +3,7 @@
 import os
 import board
 from adafruit_connection_manager import get_radio_socketpool, get_radio_ssl_context
-from adafruit_requests_fix import Session
+from adafruit_requests import Session
 import wifi
 import sdcardio
 import storage
