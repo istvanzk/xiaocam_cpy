@@ -84,7 +84,7 @@ The configuration file with camera and time-lapse parameters.
     ```
 * Libraries (in /lib):
   - [adafruit_connection_manager](https://docs.circuitpython.org/projects/connectionmanager/en/latest/api.html)
-  - [adafruit_requests](https://docs.circuitpython.org/projects/requests/en/latest/api.html) or the modified version [adafruit_requests_fix](#adafruit_requests_fix)
+  - [adafruit_requests](https://docs.circuitpython.org/projects/requests/en/latest/api.html)
 
 
 ## Testing
