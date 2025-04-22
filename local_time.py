@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import time
-import rtc
-from adafruit_requests_fix import Session
+from adafruit_requests import Session
+
+if sys.implementation.name == "circuitpython":
+    from rtc import RTC
+else:
+    from fakertc import RTC
+
 
 def _url_encode(url):
     """ A simple function to perform minimal URL encoding """
@@ -57,7 +63,7 @@ class LocalTimeAPI(object):
         # Initialize RTC (singleton)
         # https://docs.circuitpython.org/en/latest/shared-bindings/rtc/index.html
         # Any modifications here are visible across all instances in all modules
-        self.rtc = rtc.RTC()
+        self.rtc = RTC()
 
     def get_timeserver_time(self) -> time.struct_time:
         """ 

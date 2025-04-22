@@ -47,20 +47,8 @@ if not wifi_available:
 # See https://github.com/adafruit/Adafruit_CircuitPython_ConnectionManager/blob/42073559468d0c8af9bb1fe5e06fccd4d1d9a845/adafruit_connection_manager.py#L130
 pool = get_radio_socketpool(wifi.radio)
 ssl_context = get_radio_ssl_context(wifi.radio)
-requests_session = Session(pool, ssl_context)
-## Alternative
-## https://docs.circuitpython.org/en/latest/shared-bindings/ssl/index.html
-# import socketpool
-# import ssl
-# ssl_context = ssl.create_default_context()
-## curl -vvI --insecure https://api.dropboxapi.com
-## curl -w %{certs} https://api.dropboxapi.com > cacert.pem
-## 5 years OLD: dropbox/trusted-certs.crt
-# with open("cacert.pem", "rb") as certfile:
-#     ssl_context.load_verify_locations(cadata=certfile.read())
-# ssl_context.set_default_verify_paths()
-# pool = socketpool.SocketPool(wifi.radio)
-# session = requests.Session(pool, ssl_context)
+requests_other = Session(pool, ssl_context)
+requests_dropbox = Session(pool, ssl_context, session_id="dbx")
 
 # print("-" * 40)
 # print("Nothing yet opened")
@@ -70,7 +58,7 @@ requests_session = Session(pool, ssl_context)
 
 print("-" * 80)
 print("Init Time API instance and set RTC time...")
-time_api = LocalTimeAPI(requests_session)
+time_api = LocalTimeAPI(requests_other)
 time_api.set_datetime()
 print(f"✅ Current RTC time: {time_api.get_datetime()}")
 print("-" * 80)
@@ -89,7 +77,7 @@ try:
     dbx_app_secret    = os.getenv("DBX_APP_SECRET")    # = tokens["oauth_result"].app_secret
     dbx_access_token  = os.getenv("DBX_ACCESS_TOKEN")  # = tokens["oauth_result"].access_token
     dbx_refresh_token = os.getenv("DBX_REFRESH_TOKEN") # = tokens["oauth_result"].refresh_token
-    dbx_access_token_expiration = os.getenv("DBX_EXPIRES_AT") # = tokens["oauth_result"].expires_at converted to seconds
+    dbx_access_token_expiration = int(os.getenv("DBX_EXPIRES_AT")) # = tokens["oauth_result"].expires_at converted to seconds
     #print(dbx_access_token_expiration)
 
     # Init client
@@ -100,7 +88,7 @@ try:
         user_agent='XiaoCPY1/0.0.1',
         oauth2_access_token_expiration=dbx_access_token_expiration, #seconds, not datetime.datetime!
         oauth2_refresh_token=dbx_refresh_token,
-        session=requests_session,
+        session=requests_dropbox,
         app_key=dbx_app_key,
         app_secret=dbx_app_secret
     )

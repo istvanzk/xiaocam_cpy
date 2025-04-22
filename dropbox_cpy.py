@@ -28,12 +28,23 @@
 
 __all__ = ["DropboxAPI"]
 
-import rtc
+import sys
 import time
 from json import dumps, loads
 from random import random
-from binascii import b2a_base64
-from adafruit_requests_fix import Session
+#from binascii import b2a_base64
+from adafruit_requests import Session
+
+if sys.implementation.name == "circuitpython":
+    from rtc import RTC
+else:
+    from fakertc import RTC
+
+# The RTC (singleton) object is used to get the current time
+# https://docs.circuitpython.org/en/latest/shared-bindings/rtc/index.html
+# The correct time/date must be set before using the Dropbox API!
+real_time = RTC()
+
 
 #
 # Dropbox API Hosts and routes
@@ -64,7 +75,7 @@ DB_DOWNLOAD_ROUTE = "files/download"
 API_NOTIFICATION_HOST = "notify.dropboxapi.com"
 
 # Maximum blocking timeout for requests
-DEFAULT_TIMEOUT = 15
+DEFAULT_TIMEOUT = 60
 # Token expiration buffer time
 TOKEN_EXPIRATION_BUFFER = 60*5
 # HTTP status codes
@@ -174,13 +185,6 @@ class InternalServerError(HttpError):
         return 'InternalServerError({!r}, {}, {!r})'.format(
             self.request_id, self.status_code, self.body)
 
-
-#
-# The RTC (singleton) object is used to get the current time
-#
-# https://docs.circuitpython.org/en/latest/shared-bindings/rtc/index.html
-# The correct time/date must be set before using the Dropbox API!
-real_time = rtc.RTC()
 
 #
 # Dropbox API Client
