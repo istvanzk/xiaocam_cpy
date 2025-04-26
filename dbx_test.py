@@ -89,6 +89,7 @@ try:
         oauth2_access_token_expiration=dbx_access_token_expiration, #seconds, not datetime.datetime!
         oauth2_refresh_token=dbx_refresh_token,
         session=requests_dropbox,
+        timeout=20,
         app_key=dbx_app_key,
         app_secret=dbx_app_secret
     )

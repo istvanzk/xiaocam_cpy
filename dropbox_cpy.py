@@ -35,15 +35,51 @@ from random import random
 #from binascii import b2a_base64
 from adafruit_requests import Session
 
+
 if sys.implementation.name == "circuitpython":
+    # The RTC (singleton) object is used to get the current time
+    # https://docs.circuitpython.org/en/latest/shared-bindings/rtc/index.html
+    # The correct time/date must be set before using the Dropbox API!
     from rtc import RTC
 else:
+    # This can be used when running the code on a PC (CPython)
     from fakertc import RTC
 
-# The RTC (singleton) object is used to get the current time
-# https://docs.circuitpython.org/en/latest/shared-bindings/rtc/index.html
-# The correct time/date must be set before using the Dropbox API!
-real_time = RTC()
+# Set up logging
+from adafruit_logging import Handler, LogRecord
+import adafruit_logging as logging
+
+class DropboxLogHandler(Handler):
+    """ Logging Dropbox info. """
+
+    def __init__(self):
+        """Create an instance."""
+        super().__init__()
+
+    def format(self, record: LogRecord) -> str:
+        """Generate a timestamped message.
+
+        :param LogRecord record: The record (message object) to be logged
+        """
+        _rtc = RTC()
+        if hasattr(_rtc, 'datetime'):
+            _created = _rtc.datetime
+        else:
+            _created = time.localtime()
+        return f"{_created.tm_year:04d}-{_created.tm_mon:02d}-{_created.tm_mday:02d} {_created.tm_hour:02d}:{_created.tm_min:02d}:{_created.tm_sec:02d} - DropboxCPY - {record.levelname} - {record.msg}"
+
+    def emit(self, record: LogRecord):
+        """Generate the message.
+
+        :param LogRecord record: The record (message object) to be logged
+        """
+        print(self.format(record))
+
+dbxlog = logging.getLogger('dropbox')
+dbxlog.addHandler(DropboxLogHandler())
+assert dbxlog.hasHandlers()
+dbxlog.setLevel(logging.INFO)
+dbxlog.info("Start info logging")
 
 
 #
@@ -57,8 +93,10 @@ real_time = RTC()
 API_HOST           = "api.dropboxapi.com"
 DB_TOKEN_ROUTE     = "oauth2/token"
 DB_USERS_GCA_ROUTE = "users/get_current_account"
-DB_CREATEFOLDER_ROUTE = "files/create_folder_v2"
 DB_LIST_ROUTE      = "files/list_folder"
+DB_CREATEFOLDER_ROUTE           = "files/create_folder_v2"
+DB_CREATEFOLDERBATCH_ROUTE      = "files/create_folder_batch"
+DB_CREATEFOLDERBATCHCHECK_ROUTE = "files/create_folder_batch/check"
 
 # Host for upload and download-style routes
 # Upload style means that the route argument goes in a Dropbox-API-Arg
@@ -222,8 +260,7 @@ class DropboxAPI(object):
             helps us identify requests coming from your application. We
             recommend you use the format "AppName/Version". If set, we append
             "/UnofficialDropboxCircuitPythonSDKv0/" to the user_agent
-        :param session: Mandatory to be provided, a new session (connection pool) is
-            created.
+        :param session: Mandatory to be provided.
         :type session: :class:`adafruit_requests.Session`
         :param dict headers: Additional headers to add to requests.
         :param Optional[float] timeout: Maximum duration in seconds that
@@ -274,8 +311,10 @@ class DropboxAPI(object):
         else:
             self._raw_user_agent = None
             self._user_agent = base_user_agent
+        dbxlog.debug(f"User agent: {self._user_agent}")
 
         self._timeout = timeout
+        dbxlog.debug(f"Timeout: {self._timeout}")
 
 
     def check_and_refresh_access_token(self):
@@ -284,7 +323,8 @@ class DropboxAPI(object):
 
         :return:
         """
-        time_now_sec = time.mktime(real_time.datetime)
+        _real_time = RTC()
+        time_now_sec = time.mktime(_real_time.datetime)
         can_refresh = self._oauth2_refresh_token and self._app_key
         needs_refresh = self._oauth2_refresh_token and \
             (not self._oauth2_access_token_expiration or
@@ -292,7 +332,7 @@ class DropboxAPI(object):
                 self._oauth2_access_token_expiration)
         needs_token = not self._oauth2_access_token
         if (needs_refresh or needs_token) and can_refresh:
-            print('Access token expired, refreshing')
+            dbxlog.info('Access token expired, refreshing')
             self.refresh_access_token()
 
     def refresh_access_token(self):
@@ -302,7 +342,7 @@ class DropboxAPI(object):
         :return:
         """
         if not (self._oauth2_refresh_token and self._app_key):
-            print('Unable to refresh access token without \
+            dbxlog.error('Unable to refresh access token without \
                 refresh token and app key')
             return
 
@@ -314,25 +354,26 @@ class DropboxAPI(object):
         if self._app_secret:
             body['client_secret'] = self._app_secret
 
-        #print('POST for refreshing access token')
+        dbxlog.debug('POST for refreshing access token')
         with self._session.post(url, data=body, timeout=self._timeout) as res:
             self.raise_dropbox_error_for_resp(res)
             token_content = res.json()
 
         if "error" in token_content:
-            print(f"Error refreshing access token: {token_content["error"]}")
+            dbxlog.error(f"Error refreshing access token: {token_content["error"]}")
             return
         
         # All good
+        _real_time = RTC()
         self._oauth2_access_token = token_content["access_token"]
-        time_now_sec = time.mktime(real_time.datetime)
-        #print(f"Previous expiration time: {self._oauth2_access_token_expiration}")
+        time_now_sec = time.mktime(_real_time.datetime)
+        dbxlog.debug(f"Previous expiration time: {self._oauth2_access_token_expiration}")
         self._oauth2_access_token_expiration = time_now_sec + \
             int(token_content["expires_in"])
         
-        print("Copy these to the settings.toml file:")
-        print(f'DBX_ACCESS_TOKEN = "{token_content['access_token']}"')
-        print(f"DBX_EXPIRES_AT = {self._oauth2_access_token_expiration}")
+        dbxlog.info("Copy these to the settings.toml file:")
+        dbxlog.info(f'DBX_ACCESS_TOKEN = "{token_content['access_token']}"')
+        dbxlog.info(f'DBX_EXPIRES_AT = {self._oauth2_access_token_expiration}')
 
 
 
@@ -467,7 +508,7 @@ class DropboxAPI(object):
         rate_limit_errors = 0
         has_refreshed = False
         while True:
-            #print(f"POST Request {url}")
+            dbxlog.debug(f"POST Request {url}")
             try:
                 # Headers
                 if headers is None:
@@ -485,6 +526,8 @@ class DropboxAPI(object):
                                         timeout=timeout) as res:
                     self.raise_dropbox_error_for_resp(res)
                     if res.status_code in (403, 404, 409):
+                        dbxlog.debug(f"POST Request failed with status code: {res.status_code}")
+                        dbxlog.debug(f"Response: {res.content.decode('utf-8')}")
                         return res.content.decode('utf-8')
                     else:
                         assert res.headers.get('content-type') == 'application/json', (
@@ -494,21 +537,24 @@ class DropboxAPI(object):
             except AuthError as e:
                 if e.error and e.error == 'expired_access_token': #and e.error.is_expired_access_token():
                     if has_refreshed:
+                        dbxlog.error('AuthError: Refreshed token error.')
                         raise
                     else:
-                        print('ExpiredCredentials: Refreshing and Retrying')
+                        dbxlog.debug('ExpiredCredentials: Refreshing and Retrying')
                         self.refresh_access_token()
                         has_refreshed = True
                 else:
+                    dbxlog.error(f"AuthError: {e}")
                     raise
             except InternalServerError as e:
                 attempt += 1
                 if attempt <= self._max_retries_on_error:
                     # Use exponential backoff
                     backoff = 2**attempt * random()
-                    print(f"HttpError status_code={e.status_code}: Retrying in {backoff:.1f} seconds")
+                    dbxlog.debug(f"HttpError status_code={e.status_code}: Retrying in {backoff:.1f} seconds")
                     time.sleep(backoff)
                 else:
+                    dbxlog.error("InternalServerError: Max retries exceeded.")
                     raise
             except RateLimitError as e:
                 rate_limit_errors += 1
@@ -516,11 +562,17 @@ class DropboxAPI(object):
                         self._max_retries_on_rate_limit >= rate_limit_errors):
                     # Set default backoff to 5 seconds.
                     backoff = e.backoff if e.backoff is not None else 5.0
-                    print(f"Ratelimit: Retrying in {backoff:.1f} seconds.")
+                    dbxlog.debug(f"Ratelimit: Retrying in {backoff:.1f} seconds.")
                     time.sleep(backoff)
                 else:
+                    dbxlog.error("RateLimitError: Max retries on rate limit exceeded.")
                     raise
-
+            except PathRootError as e:
+                dbxlog.error(f"PathRootError: {e}")
+                raise
+            except HttpError as e:
+                dbxlog.error(f"HttpError: {e}")
+                raise
 
     def raise_dropbox_error_for_resp(self, res):
         """Checks for errors from a res and handles appropiately.
@@ -531,7 +583,7 @@ class DropboxAPI(object):
 
         :param res: Response of an api request.
         """
-        #print(f"Response: {res.status_code}:: {res.headers}")
+        dbxlog.debug(f"Response: {res.status_code}:: {res.headers}")
         request_id = res.headers.get('x-dropbox-request-id')
         if res.status_code >= 500:
             raise InternalServerError(request_id, res.status_code, res.text)
