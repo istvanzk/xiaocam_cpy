@@ -633,8 +633,7 @@ class DropboxAPI(object):
         """
         Cleans up all resources like the request session/network connection.
         """
-        self._session.close()
-
+        pass
 
     def _get_route_url(self, hostname, route_name):
         """Returns the URL of the route.
