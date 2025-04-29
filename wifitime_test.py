@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Test the LocalTimeAPI implementation
+#
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvan Z. Kovacs
+#
 import os
 import wifi
 from adafruit_connection_manager import get_radio_socketpool, get_radio_ssl_context

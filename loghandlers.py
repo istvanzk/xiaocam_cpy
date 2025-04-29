@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Custom logging handlers
 #
-# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvan Z. Kovacs
 #
 
 import time

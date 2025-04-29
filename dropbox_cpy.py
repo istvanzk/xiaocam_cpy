@@ -6,6 +6,8 @@
 # Error handling is simplified and only the most common errors are handled.
 # The code is not intended to be a full implementation of the Dropbox API.
 #
+# Copyright (c) 2025 Istvan Z. Kovacs
+#
 # The MIT License (MIT)
 #     Permission is hereby granted, free of charge, to any person obtaining
 #     a copy of this software and associated documentation files (the

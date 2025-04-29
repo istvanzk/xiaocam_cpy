@@ -2,7 +2,7 @@
 # Simple configuration file for the camera and timelapse
 # Usage: from camcfg import camConfig, camTimerConfig, camDirConfig, camDbxConfig
 #
-# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvan Z. Kovacs
 #
 
 # Camera configuration

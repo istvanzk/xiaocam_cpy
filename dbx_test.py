@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Test the CircuitPython DropboxAPI implementation
 #
-# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvan Z. Kovacs
 #
 import os
 import board

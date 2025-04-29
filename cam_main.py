@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The main function to handle XIAO camera, save images locally, upload images to Dropbox.
 #
-# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvan Z. Kovacs
 #
 import os
 #import io
@@ -407,10 +407,9 @@ if camDbxConfig['image_dir'] is not None:
     if not dbx.path_exists(f"/{camDbxConfig['image_dir']}"):
         dbx.files_create_folder(f"/{camDbxConfig['image_dir']}", autorename=False)
 
-    # The estimated upload time (sec) in KByte per second.
-    # This estimate will be adjusted based on actual file size and measured upload speed
+    # The estimated processsing+upload time (sec) in KByte per second.
+    # This estimate will be adjusted based on actual file size and measured processsing+upload speed
     # The upload time value is substracted from the configured timelapse interval, interval_sec
-    # (for 12 KBps and 50KB image size, the upload time is 50/12 = 4.16 sec)
     avg_proc_speed_KBps = ProcUploadSpeedKBps()
 
     camlog.info(f"Dropbox folder initialized")
