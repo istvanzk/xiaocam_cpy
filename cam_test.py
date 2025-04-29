@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Test the espcamera functionalities
+#
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+#
 import os
 import board
 import busio

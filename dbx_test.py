@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Test the CircuitPython DropboxAPI implementation
+#
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+#
 import os
 import board
 from adafruit_connection_manager import get_radio_socketpool, get_radio_ssl_context

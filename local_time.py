@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Simple class to get the current local time from a time server
+#
+# MIT License (MIT), see LICENSE - Copyright (c) 2025 Istvn Z. Kovacs
+#
 import os
 import sys
 import time

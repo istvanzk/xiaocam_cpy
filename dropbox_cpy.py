@@ -62,10 +62,7 @@ class DropboxLogHandler(Handler):
         :param LogRecord record: The record (message object) to be logged
         """
         _rtc = RTC()
-        if hasattr(_rtc, 'datetime'):
-            _created = _rtc.datetime
-        else:
-            _created = time.localtime()
+        _created = _rtc.datetime
         return f"{_created.tm_year:04d}-{_created.tm_mon:02d}-{_created.tm_mday:02d} {_created.tm_hour:02d}:{_created.tm_min:02d}:{_created.tm_sec:02d} - DropboxCPY - {record.levelname} - {record.msg}"
 
     def emit(self, record: LogRecord):
@@ -79,8 +76,6 @@ dbxlog = logging.getLogger('dropbox')
 dbxlog.addHandler(DropboxLogHandler())
 assert dbxlog.hasHandlers()
 dbxlog.setLevel(logging.INFO)
-dbxlog.info("Start info logging")
-
 
 #
 # Dropbox API Hosts and routes
@@ -93,7 +88,8 @@ dbxlog.info("Start info logging")
 API_HOST           = "api.dropboxapi.com"
 DB_TOKEN_ROUTE     = "oauth2/token"
 DB_USERS_GCA_ROUTE = "users/get_current_account"
-DB_LIST_ROUTE      = "files/list_folder"
+DB_LIST_ROUTE         = "files/list_folder"
+DB_GETMETADATA_ROUTE  = "files/get_metadata"
 DB_CREATEFOLDER_ROUTE           = "files/create_folder_v2"
 DB_CREATEFOLDERBATCH_ROUTE      = "files/create_folder_batch"
 DB_CREATEFOLDERBATCHCHECK_ROUTE = "files/create_folder_batch/check"
@@ -371,9 +367,9 @@ class DropboxAPI(object):
         self._oauth2_access_token_expiration = time_now_sec + \
             int(token_content["expires_in"])
         
-        dbxlog.info("Copy these to the settings.toml file:")
-        dbxlog.info(f'DBX_ACCESS_TOKEN = "{token_content['access_token']}"')
-        dbxlog.info(f'DBX_EXPIRES_AT = {self._oauth2_access_token_expiration}')
+        print("Copy these to the settings.toml file:")
+        print(f'DBX_ACCESS_TOKEN = "{token_content['access_token']}"')
+        print(f'DBX_EXPIRES_AT = {self._oauth2_access_token_expiration}')
 
 
 
@@ -426,6 +422,49 @@ class DropboxAPI(object):
             json=params,
             timeout=self._timeout)
 
+
+    def files_get_metadata(self, path: str):
+        """
+        Gets metadata for a file or folder.
+
+        :param str path: path to the file or folder
+        :return: json with metadata info
+        """
+        self.check_and_refresh_access_token()
+        url = self._get_route_url(API_HOST, DB_GETMETADATA_ROUTE)
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        params = {
+            'path': path,
+            'include_media_info': False,
+            'include_deleted': False,
+            'include_has_explicit_shared_members': False,
+            'include_mounted_folders': True
+        }
+
+        return self.post_request_json_string_with_retry(
+            url, 
+            headers=headers,
+            json=params,
+            timeout=self._timeout)
+
+
+    def path_exists(self, file_dir: str) -> bool:
+        """
+        Check if the file/dir exists in Dropbox App 
+        
+        :param str file_dir: path to the file or folder
+        :return: True if file/dir exists, False otherwise
+        """
+        res = self.files_get_metadata(file_dir)
+        #if res["_tag"] == 'not_found':
+        #    return False
+        if res["_tag"] == 'folder': 
+            return True
+        if res["_tag"] == 'file':
+            return True
+        return False
 
     def files_upload(self, file, path: str, writemode: str ='overwrite'):
         """
