@@ -28,15 +28,15 @@ if ssid is not None and password is not None:
     print(f"\nConnecting to {ssid}...")
     print(f"Signal Strength: {rssi}")
     wifi_available = True
+    print(f"WiFi connection...", end="")
     try:
         # Connect to the Wi-Fi network
         wifi.radio.connect(ssid, password)
+        ip = wifi.radio.ipv4_address
+        print(f" ✅ Pass.\n  IP: {ip}")
     except OSError as e:
         wifi_available = False
-        print(f"❌ OSError: {e}")
-
-    ip = wifi.radio.ipv4_address
-    print(f"✅ WiFi connected: {ip}")
+        print(f" ❌ Failed.\n  Error: {e}")
 else:
     print(f"❌ Wifi credentials not found in settings.toml. No WiFi connection.")
 
@@ -60,10 +60,10 @@ requests_dropbox = Session(pool, ssl_context, session_id="dbx")
 # print(f"Available Managed Sockets: {connection_manager.available_socket_count}")
 
 print("-" * 80)
-print("Init Time API instance and set RTC time...")
+print("Init Time API instance and set RTC time...", end="")
 time_api = LocalTimeAPI(requests_other)
 time_api.set_datetime()
-print(f"✅ Current RTC time: {time_api.get_datetime()}")
+print(f" ✅ Pass.\n  {time_api.get_datetime()}")
 print("-" * 80)
 
 # print("-" * 40)
@@ -84,7 +84,7 @@ try:
     #print(dbx_access_token_expiration)
 
     # Init client
-    print("  Init client...") 
+    print("  Init client...", end="") 
     from dropbox_cpy import DropboxAPI
     dbx = DropboxAPI(
         oauth2_access_token=dbx_access_token,
@@ -92,11 +92,11 @@ try:
         oauth2_access_token_expiration=dbx_access_token_expiration, #seconds, not datetime.datetime!
         oauth2_refresh_token=dbx_refresh_token,
         session=requests_dropbox,
-        timeout=20,
+        timeout=6,
         app_key=dbx_app_key,
         app_secret=dbx_app_secret
     )
-    print("  ✅ Passed")
+    print(" ✅ Pass.")
 
     # print("-" * 40)
     # print("2nd request opened & closed")
@@ -110,32 +110,32 @@ try:
     # time.sleep(1)
 
     print("-" * 40)
-    print("  Get user account info...") 
+    print("  Get user account info...", end="") 
     info = dbx.users_get_current_account()
     # info._all_field_names_ =
     # {'account_id', 'is_paired', 'locale', 'email', 'name', 'team', 'country', 'account_type', 'referral_link'}
-    print(f"  Current account info:\n  {info}\n  ✅ Passed")
+    print(f" ✅ Pass.\n    Account:\n    {info}")
 
     # print("-" * 40)
-    # print("  Create folder...") 
+    # print("  Create folder...", end="") 
     # create_folder = dbx.files_create_folder("/120425")
-    # print(f"  Create folder result:\n  {create_folder}\n  ✅ Passed")
+    # print(f" ✅ Pass.\n    Create folder result:\n    {create_folder}")
 
     # print("-" * 40)
-    # print("  Upload image from SD card...") 
+    # print("  Upload image from SD card...", end="") 
     # with open("/sd/image.jpg", "rb") as f:
     #     res = dbx.files_upload(f, "/120425/image.jpg")
-    #     print(f"  Upload file result:\n  {res}\n  ✅ Passed")
+    #     print(f" ✅ Pass.\n    Upload file result:\n    {res}")
 
     # print("-" * 40)
-    # print("  List folder content...") 
+    # print("  List folder content...", end="") 
     # files_list_folder = dbx.files_list_folder("/120425")
-    # print(f"  List folder result:\n  {files_list_folder}\n  ✅ Passed")
+    # print(f"  ✅ Pass.\n    List folder result:\n    {files_list_folder}")
 
-    print("✅ Passed. Test Dropbox API: Done")
+    print("Test Dropbox API: ✅ Pass.")
 
 except Exception as e:
-    print(f"❌ Error. {e}")
+    print(f"❌ Failed.\n  Error: {e}")
     raise
 finally:
     print("-" * 80)
