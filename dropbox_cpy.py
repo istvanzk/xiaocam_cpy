@@ -442,7 +442,6 @@ class DropboxAPI(object):
             'include_media_info': False,
             'include_deleted': False,
             'include_has_explicit_shared_members': False,
-            'include_mounted_folders': True
         }
 
         return self.post_request_json_string_with_retry(
@@ -460,11 +459,11 @@ class DropboxAPI(object):
         :return: True if file/dir exists, False otherwise
         """
         res = self.files_get_metadata(file_dir)
-        #if res["_tag"] == 'not_found':
+        #if res[".tag"] == 'not_found':
         #    return False
-        if res["_tag"] == 'folder': 
+        if res[".tag"] == 'folder': 
             return True
-        if res["_tag"] == 'file':
+        if res[".tag"] == 'file':
             return True
         return False
 
