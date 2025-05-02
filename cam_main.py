@@ -333,7 +333,10 @@ if camConfig['cam_id'] is not None:
 
     # Set the camera parameters
     if camConfig['image_rot'] == 180:
-        cam.hmirror = True
+        if cam.sensor_name == "OV2640":
+            cam.hmirror = True
+        else:
+            cam.hmirror = False
         cam.vflip   = True
     else:
         cam.hmirror = False
@@ -462,16 +465,17 @@ while run_timelapse:
                 prev_dark_mode = True
 
                 # Set camera to "night mode"
+                cam.contrast   = 1
                 cam.brightness = 2
                 cam.aec2 = True
                 
                 #cam.agc_gain = 20 # from 0 to 30.
 
-                #cam.gain_ctrl = True
-                #cam.gain_ceiling = espcamera.GainCeiling.GAIN_8X
+                cam.gain_ctrl = False
+                cam.gain_ceiling = espcamera.GainCeiling.GAIN_8X
 
-                #cam.exposure_ctrl = False
-                #cam.aec_value = 200 #from 0 to 1200
+                cam.exposure_ctrl = False
+                cam.aec_value = 1000 #from 0 to 1200
 
                 camlog.info(f"Night mode: {time_interval}sec")
 
@@ -516,10 +520,11 @@ while run_timelapse:
                 # Upload to Dropbox
                 if prev_ymd != ymd_str:
                     dbx.files_create_folder(f"/{camDbxConfig['image_dir']}/{ymd_str}", autorename=False)
-                with open(f"/sd{dir_img_path}", "rb") as f:
-                    res = dbx.files_upload(f, dbx_img_path)
-                #encoded_data = binascii.b2a_base64(frame).strip()
-                #res = dbx.files_upload(frame, dbx_img_path)
+                # Use this option with reading from SD only if absolutely needed
+                #with open(f"/sd{dir_img_path}", "rb") as f:
+                #    res = dbx.files_upload(f, dbx_img_path)
+                # There is no need to base64 encode the image, binascii.b2a_base64(frame).strip()
+                res = dbx.files_upload(frame, dbx_img_path)
                 camlog.debug(f"Image #{image_count} uploaded")
 
                 # Update previous ymd value to avoid folder operations
